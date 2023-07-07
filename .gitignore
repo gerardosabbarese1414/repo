@@ -137,4 +137,4 @@ inter_env/*
 # Custom files
 # Add here custom files to exclude
 
-virgin_venv/*
+venv/*
