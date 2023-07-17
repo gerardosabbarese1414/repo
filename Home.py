@@ -1,32 +1,59 @@
-from selenium import webdriver
+import requests
+from bs4 import BeautifulSoup
 import pandas as pd
+import streamlit as st
+import base64
+
 
 def scrape_startup_data(url):
-    # Utilizza Selenium per aprire il browser
-    driver = webdriver.Chrome(executable_path='path_del_tuo_chromedriver')
-    driver.get(url)
+    # Effettua la richiesta GET all'URL fornito dall'utente
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Qui dovresti aggiungere il codice per inserire i filtri (se necessario)
-    # ad esempio, utilizzando le funzioni di Selenium per interagire con gli elementi del sito web
+    # Trova la tabella contenente i risultati della ricerca
+    table = soup.find('table', class_='tab_data')
 
-    # Aspetta il caricamento dei dati dinamici
-    # Inserisci qui eventuali comandi di attesa per assicurarti che i dati siano stati caricati
+    if table is None:
+        st.error("Nessun risultato trovato. Controlla l'URL o riprova più tardi.")
+        return None
 
-    # Estrai la tabella contenente i risultati
-    table = driver.find_element_by_css_selector('table.tab_data')
+    # Estrai le intestazioni delle colonne dalla prima riga della tabella
+    header_row = table.find('tr')
+    headers = [header.text.strip() for header in header_row.find_all('th')]
 
-    # Estrai i dati della tabella in un DataFrame
-    df = pd.read_html(table.get_attribute('outerHTML'))[0]
+    # Crea una lista per memorizzare i dati delle startup
+    data = []
 
-    # Chiudi il browser
-    driver.quit()
+    # Itera sulle righe della tabella (escludendo la prima riga delle intestazioni)
+    for row in table.find_all('tr')[1:]:
+        # Estrai i dati da ogni cella della riga
+        cell_data = [cell.text.strip() for cell in row.find_all('td')]
+        data.append(cell_data)
 
+    # Crea un DataFrame utilizzando i dati estratti e le intestazioni delle colonne
+    df = pd.DataFrame(data, columns=headers)
     return df
 
-# Codice per interagire con Streamlit e ottenere l'URL dall'utente, quindi chiamare la funzione di scraping
-# e visualizzare o scaricare i risultati, come visto negli esempi precedenti con Streamlit.
 
+def main():
+    st.title("Scraping Dati Startup Innovative")
 
+    # Aggiungi input utente per l'URL
+    url = st.text_input("Inserisci l'URL:", "https://startup.registroimprese.it/isin/search?0#")
+
+    # Esegui lo scraping dei dati al clic del pulsante
+    if st.button("Esegui Scraping"):
+        st.text("Estrazione dei dati in corso...")
+        df = scrape_startup_data(url)
+
+        if df is not None:
+            st.write("Dati delle startup innovative:")
+            st.dataframe(df)
+
+            # Salva il DataFrame in un file CSV al clic del pulsante "Download CSV"
+            if st.button("Download CSV"):
+                csv = df.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # Codifica in base64
 
 
 
