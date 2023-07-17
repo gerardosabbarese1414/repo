@@ -1,3 +1,5 @@
+import subprocess
+subprocess.run(["pip", "install", "--no-cache-dir", "-r", "requirements.txt"])
 import streamlit as st
 import pandas as pd
 from selenium import webdriver
