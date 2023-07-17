@@ -1,36 +1,62 @@
 import streamlit as st
 import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
+def get_emails(startup_list):
+    options = Options()
+    options.headless = True  # Per eseguire il browser in modalità headless (senza interfaccia grafica)
+
+    # Specifica il percorso del driver del browser
+    driver = webdriver.Chrome(executable_path='/path/to/chromedriver', options=options)
+
+    emails = []
+    for startup in startup_list:
+        driver.get('https://startup.registroimprese.it/isin/home')
+
+        # Seleziona il campo startup e clicca sul tasto ricerca avanzata
+        driver.find_element_by_id('tipo_impresa').send_keys('startup')
+        driver.find_element_by_id('cercaAvanzata').click()
+
+        # Inserisci la regione nella ricerca
+        driver.find_element_by_id('sigla_regione').send_keys(startup)
+
+        # Attendi il caricamento dei risultati
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'box_segnalazioni')))
+
+        # Estrapola le email dai risultati
+        emails_elem = driver.find_elements_by_xpath('//a[@class="mailto"]')
+        startup_emails = [email_elem.get_attribute('href').split(':')[1] for email_elem in emails_elem]
+        emails.extend(startup_emails)
+
+    driver.quit()
+    return emails
 
 def main():
-    st.title("Seleziona le colonne di interesse")
+    st.title("Bot per Estrarre Email di Startup Innovative")
 
-    # Aggiungi input utente per il caricamento del file CSV
-    uploaded_file = st.file_uploader("Carica il file CSV", type=["csv"])
+    # Esempio: utilizziamo tutte le regioni italiane come elenco di ricerca
+    regioni = ['Abruzzo', 'Basilicata', 'Calabria', 'Campania', 'Emilia-Romagna', 'Friuli-Venezia Giulia', 'Lazio', 'Liguria', 'Lombardia', 'Marche', 'Molise', 'Piemonte', 'Puglia', 'Sardegna', 'Sicilia', 'Toscana', 'Trentino-Alto Adige', 'Umbria', 'Valle d\'Aosta', 'Veneto']
 
-    if uploaded_file is not None:
-        try:
-            # Carica il file CSV in un DataFrame con separatore '|'
-            df = pd.read_csv(uploaded_file, sep=';', encoding='utf-8', error_bad_lines=False)
-        except UnicodeDecodeError:
-            df = pd.read_csv(uploaded_file, sep='|', encoding='ISO-8859-1', error_bad_lines=False)
+    st.write("Seleziona le regioni per estrarre le email delle startup innovative:")
+    selected_regions = st.multiselect("Regioni", regioni, default=regioni)
 
-        # Ottieni le colonne dalla prima riga del DataFrame
-        columns = list(df.columns)
+    if st.button("Estrai Email"):
+        startup_emails = get_emails(selected_regions)
 
-        # Aggiungi input utente per selezionare le colonne da visualizzare
-        selected_columns = st.multiselect("Seleziona le colonne da visualizzare", columns)
+        st.write("Email delle startup trovate:")
+        for email in startup_emails:
+            st.write(email)
 
-        if len(selected_columns) > 0:
-            # Filtra il DataFrame per mantenere solo le colonne selezionate
-            df_selected = df[selected_columns]
+        # Creazione DataFrame con le email
+        df = pd.DataFrame(startup_emails, columns=['Email'])
 
-            # Mostra il DataFrame con le colonne selezionate
-            st.write("Dati delle colonne selezionate:")
-            st.write(df_selected)
-        else:
-            st.warning("Seleziona almeno una colonna da visualizzare.")
-    else:
-        st.warning("Carica un file CSV per iniziare.")
+        # Download CSV
+        csv_file = df.to_csv(index=False)
+        st.download_button("Scarica CSV", data=csv_file, file_name='startup_emails.csv', mime='text/csv')
 
 if __name__ == '__main__':
     main()
