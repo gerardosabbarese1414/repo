@@ -10,7 +10,7 @@ def main():
     if uploaded_file is not None:
         try:
             # Carica il file CSV in un DataFrame con separatore '|'
-            df = pd.read_csv(uploaded_file, sep='|', encoding='utf-8', error_bad_lines=False)
+            df = pd.read_csv(uploaded_file, sep=';', encoding='utf-8', error_bad_lines=False)
         except UnicodeDecodeError:
             df = pd.read_csv(uploaded_file, sep='|', encoding='ISO-8859-1', error_bad_lines=False)
 
