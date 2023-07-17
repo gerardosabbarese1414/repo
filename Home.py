@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import streamlit as st
 
+
 def scrape_startup_data(url):
     # Effettua la richiesta GET all'URL fornito dall'utente
     response = requests.get(url)
@@ -10,6 +11,10 @@ def scrape_startup_data(url):
 
     # Trova la tabella contenente i risultati della ricerca
     table = soup.find('table', class_='tab_data')
+
+    if table is None:
+        st.error("Nessun risultato trovato. Controlla l'URL o riprova più tardi.")
+        return None
 
     # Estrai le intestazioni delle colonne dalla prima riga della tabella
     header_row = table.find('tr')
@@ -28,6 +33,7 @@ def scrape_startup_data(url):
     df = pd.DataFrame(data, columns=headers)
     return df
 
+
 def main():
     st.title("Scraping Dati Startup Innovative")
 
@@ -38,19 +44,21 @@ def main():
     if st.button("Esegui Scraping"):
         st.text("Estrazione dei dati in corso...")
         df = scrape_startup_data(url)
-        st.write("Dati delle startup innovative:")
-        st.dataframe(df)
 
-        # Salva il DataFrame in un file CSV al clic del pulsante "Download CSV"
-        if st.button("Download CSV"):
-            csv = df.to_csv(index=False)
-            b64 = base64.b64encode(csv.encode()).decode()  # Codifica in base64
-            href = f'<a href="data:file/csv;base64,{b64}" download="startup_data.csv">Clicca qui per scaricare il CSV</a>'
-            st.markdown(href, unsafe_allow_html=True)
+        if df is not None:
+            st.write("Dati delle startup innovative:")
+            st.dataframe(df)
+
+            # Salva il DataFrame in un file CSV al clic del pulsante "Download CSV"
+            if st.button("Download CSV"):
+                csv = df.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # Codifica in base64
+                href = f'<a href="data:file/csv;base64,{b64}" download="startup_data.csv">Clicca qui per scaricare il CSV</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
 
 if __name__ == '__main__':
     main()
-
 
 
 
