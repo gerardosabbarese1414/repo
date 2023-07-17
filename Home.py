@@ -8,8 +8,11 @@ def main():
     uploaded_file = st.file_uploader("Carica il file CSV", type=["csv"])
 
     if uploaded_file is not None:
-        # Carica il file CSV in un DataFrame
-        df = pd.read_csv(uploaded_file)
+        # Carica il file CSV in un DataFrame con gestione dell'errore di decodifica Unicode
+        try:
+            df = pd.read_csv(uploaded_file, encoding='utf-8')
+        except UnicodeDecodeError:
+            df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
 
         # Mostra l'elenco delle colonne presenti nel file CSV
         st.write("Colonne disponibili:")
