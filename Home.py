@@ -4,14 +4,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 
 def get_emails(startup_list):
-    options = Options()
-    options.headless = True  # Per eseguire il browser in modalità headless (senza interfaccia grafica)
-
-    # Specifica il percorso del driver del browser
-    driver = webdriver.Chrome(executable_path='/path/to/chromedriver', options=options)
+    # Specifica il percorso del driver di Chrome
+    driver = webdriver.Chrome(executable_path='/path/to/chromedriver')
 
     emails = []
     for startup in startup_list:
