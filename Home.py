@@ -6,6 +6,7 @@ def main():
 
     # Aggiungi input utente per il caricamento del file CSV
     uploaded_file = st.file_uploader("Carica il file CSV", type=["csv"])
+    df = pd.read_csv(uploaded_file, sep='|', encoding='utf-8', error_bad_lines=False)
 
     if uploaded_file is not None:
         try:
