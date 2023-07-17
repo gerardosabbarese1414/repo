@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def get_emails(startup_list):
     # Specifica il percorso del driver di Chrome
-    driver = webdriver.Chrome(executable_path='/path/to/chromedriver')
+    driver = webdriver.Chrome(executable_path='./chromedriver')
 
     emails = []
     for startup in startup_list:
