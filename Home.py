@@ -14,12 +14,11 @@ def main():
         except UnicodeDecodeError:
             df = pd.read_csv(uploaded_file, encoding='ISO-8859-1', error_bad_lines=False)
 
-        # Mostra l'elenco delle colonne presenti nel file CSV
-        st.write("Colonne disponibili:")
-        st.write(df.columns)
+        # Ottieni le colonne dalla prima riga del DataFrame
+        columns = list(df.columns)
 
         # Aggiungi input utente per selezionare le colonne da visualizzare
-        selected_columns = st.multiselect("Seleziona le colonne da visualizzare", df.columns)
+        selected_columns = st.multiselect("Seleziona le colonne da visualizzare", columns)
 
         if len(selected_columns) > 0:
             # Filtra il DataFrame per mantenere solo le colonne selezionate
@@ -35,5 +34,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
