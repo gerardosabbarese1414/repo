@@ -8,11 +8,11 @@ def main():
     uploaded_file = st.file_uploader("Carica il file CSV", type=["csv"])
 
     if uploaded_file is not None:
-        # Carica il file CSV in un DataFrame con gestione dell'errore di decodifica Unicode
         try:
-            df = pd.read_csv(uploaded_file, encoding='utf-8')
+            # Carica il file CSV in un DataFrame con gestione dell'errore di decodifica Unicode
+            df = pd.read_csv(uploaded_file, encoding='utf-8', error_bad_lines=False)
         except UnicodeDecodeError:
-            df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
+            df = pd.read_csv(uploaded_file, encoding='ISO-8859-1', error_bad_lines=False)
 
         # Mostra l'elenco delle colonne presenti nel file CSV
         st.write("Colonne disponibili:")
@@ -31,9 +31,7 @@ def main():
 
             # Salva il DataFrame con le colonne selezionate in un nuovo file CSV
             csv = df_selected.to_csv(index=False)
-            b64 = base64.b64encode(csv.encode()).decode()  # Codifica in base64
-            href = f'<a href="data:file/csv;base64,{b64}" download="selected_columns_data.csv">Clicca qui per scaricare il CSV</a>'
-            st.markdown(href, unsafe_allow_html=True)
+            st.download_button("Clicca qui per scaricare il CSV", data=csv, file_name="selected_columns_data.csv", mime="text/csv")
         else:
             st.warning("Seleziona almeno una colonna da mantenere.")
     else:
@@ -41,7 +39,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
 
 
