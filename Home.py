@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import streamlit as st
 
-def extract_data(url):
-    # Effettua la richiesta GET alla pagina web
+def scrape_startup_data(url, info_types):
+    # Effettua la richiesta GET all'URL fornito dall'utente
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -15,41 +15,38 @@ def extract_data(url):
 
     # Itera sugli elementi div e estrae i dati di interesse
     for div in startup_divs:
-        ragione_sociale = div.find('div', class_='col-12 col-md-6 name').text.strip()
-        pec = div.find('div', class_='col-12 col-md-4 pec').text.strip()
-        email = div.find('div', class_='col-12 col-md-4 email').text.strip()
+        startup_data = {}
 
-        data.append({'Ragione Sociale': ragione_sociale, 'PEC': pec, 'Email': email})
+        if "Ragione Sociale" in info_types:
+            ragione_sociale = div.find('div', class_='col-12 col-md-6 name').text.strip()
+            startup_data['Ragione Sociale'] = ragione_sociale
 
-    return data
+        if "PEC" in info_types:
+            pec = div.find('div', class_='col-12 col-md-4 pec').text.strip()
+            startup_data['PEC'] = pec
 
-def scrape_startup_data():
-    base_url = 'https://startup.registroimprese.it/isin/search?1#'
-    all_data = []
+        if "Email" in info_types:
+            email = div.find('div', class_='col-12 col-md-4 email').text.strip()
+            startup_data['Email'] = email
 
-    # Itera su tutte le pagine
-    page = 1
-    while True:
-        url = f'{base_url}&page={page}'
-        data = extract_data(url)
+        data.append(startup_data)
 
-        if not data:
-            break
-
-        all_data.extend(data)
-        page += 1
-
-    # Salva i dati in un DataFrame
-    df = pd.DataFrame(all_data)
+    df = pd.DataFrame(data)
     return df
 
 def main():
     st.title("Scraping Dati Startup Innovative")
 
+    # Aggiungi input utente per l'URL
+    url = st.text_input("Inserisci l'URL:", "https://startup.registroimprese.it/isin/search?1#")
+
+    # Aggiungi input utente per il tipo di informazioni
+    info_types = st.multiselect("Seleziona i tipi di informazioni da scaricare:", ["Ragione Sociale", "PEC", "Email"], ["Ragione Sociale", "PEC", "Email"])
+
     # Esegui lo scraping dei dati al clic del pulsante
     if st.button("Esegui Scraping"):
         st.text("Estrazione dei dati in corso...")
-        df = scrape_startup_data()
+        df = scrape_startup_data(url, info_types)
         st.write("Dati delle startup innovative:")
         st.dataframe(df)
 
@@ -60,6 +57,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
