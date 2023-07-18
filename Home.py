@@ -1,61 +1,52 @@
+import re
 import requests
-from bs4 import BeautifulSoup
+import csv
+import streamlit as st
+from tqdm import tqdm
+import time
 
-# Funzione per estrarre i dati di tutte le startup, inclusi gli indirizzi email
-def extract_startup_data():
-    url = 'https://startup.registroimprese.it/isin/home'
 
-    # Effettua la richiesta HTTP alla pagina web
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Errore nella richiesta HTTP: {response.status_code}")
+def get_first_email_from_website(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', response.text)
+            return emails[0] if emails else None
+    except:
+        pass
+    return None
 
-    soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Estrapola i dati di tutte le pagine
-    data = []
-    emails = []
-    while True:
-        # Estrapola i dati della pagina corrente
-        table = soup.find('table', class_='tab_data')
-        rows = table.find_all('tr')
-        for row in rows[1:]:
-            cells = row.find_all('td')
-            startup_data = [cell.text for cell in cells]
-            data.append(startup_data)
+def main():
+    st.title("Web Scraping di Email da Siti Web")
+    st.write("Inserisci l'URL di un sito web senza HTTPS per cercare email.")
 
-            # Recupera l'indirizzo email dalla pagina di ogni startup
-            link = cells[0].find('a')['href']
-            email = get_email_from_startup(link)
-            emails.append(email)
+    url_list = st.text_area("Inserisci gli URL dei siti web (uno per riga)")
+    urls = url_list.split("\n")
 
-        # Passa alla pagina successiva, se presente
-        next_button = soup.find('a', class_='next')
-        if next_button is None:
-            break
+    if st.button("Cerca Email"):
+        results = []
 
-        next_page_url = 'https://startup.registroimprese.it' + next_button['href']
-        response = requests.get(next_page_url)
-        if response.status_code != 200:
-            raise Exception(f"Errore nella richiesta HTTP: {response.status_code}")
+        with st.spinner("Ricerca in corso..."):
+            for url in tqdm(urls, desc="Progresso", dynamic_ncols=True):
+                if url:
+                    email = get_first_email_from_website(f"http://{url}")
+                    if email:
+                        results.append({"Sito Web": url, "Email Trovata": email})
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        if results:
+            with open("results.csv", "w", newline="", encoding="utf-8") as csvfile:
+                fieldnames = ["Sito Web", "Email Trovata"]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for result in results:
+                    writer.writerow(result)
+            st.success("Risultati salvati in results.csv. Puoi scaricarlo dal link qui sotto.")
+            st.markdown(
+                f'<a href="results.csv" download>Scarica il file CSV</a>',
+                unsafe_allow_html=True
+            )
 
-    # Crea un DataFrame con i dati estratti
-    columns = ['Denominazione', 'Natura Giuridica', 'Codice Fiscale', 'Provincia', 'Comune', 'Data Iscrizione Startup', 'Data Iscrizione Registro Imprese', 'Data Inizio Attività', 'Ateco 2007', 'Settore', 'Attività', 'Sito Internet', 'Regione', 'Sezione Attività', 'Classe Addetti', 'Classe Val. Prod.', 'Alto Valore Tecnologico', 'Vocazione Sociale', 'Classe Capitale Sociale', 'Spese in Ricerca e Sviluppo', 'Forza Lavoro con Titoli', 'Possesso di Brevetti', 'Data Dichiarazione', 'Prevalenza Femminile', 'Prevalenza Giovanile', 'Prevalenza Straniera', 'Email']
-    df = pd.DataFrame(data, columns=columns)
-    df['Email'] = emails
 
-    return df
-
-# Funzione per estrarre l'email da ogni pagina di startup
-def get_email_from_startup(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Errore nella richiesta HTTP: {response.status_code}")
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-    email_element = soup.find('a', href=lambda href: href and href.startswith('mailto:'))
-    email = email_element['href'].split(':')[1]
-
-    return email
+if __name__ == "__main__":
+    main()
