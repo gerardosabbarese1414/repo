@@ -3,21 +3,20 @@ import requests
 import csv
 import streamlit as st
 
+
 def get_emails_from_text(text):
     emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     return emails
 
+
 def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
-    st.write("Inserisci gli URL dei siti web o domini, o del testo (uno per riga).")
 
     user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
-    start_scraping = st.button("Avvia la Ricerca")
+    items = user_input.split("\n")
 
-    if start_scraping:
-        items = user_input.split("\n")
-
+    if st.button("Cerca Email"):
         results = []
 
         for item in items:
@@ -55,6 +54,7 @@ def main():
                 )
         else:
             st.write("Nessun risultato trovato.")
+
 
 if __name__ == "__main__":
     main()
