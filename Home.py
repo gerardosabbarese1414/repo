@@ -3,6 +3,7 @@ import requests
 import csv
 import streamlit as st
 import pandas as pd
+from io import StringIO
 
 def get_first_email_from_website(url):
     try:
@@ -24,8 +25,9 @@ def contains_dot(text):
 def create_csv(results):
     if results:
         df = pd.DataFrame(results)
-        csv_data = df.to_csv(index=False)
-        return csv_data
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        return csv_buffer.getvalue()
     return None
 
 def main():
