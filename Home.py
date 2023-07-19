@@ -1,23 +1,19 @@
 import re
-import requests
+import httpx
 import csv
 import streamlit as st
 import pandas as pd
 
-
 def get_first_email_from_website(url):
-    if not url.startswith("http://") and not url.startswith("https://"):
-        url = f"http://{url}"
-
     try:
-        response = requests.get(url)
+        with httpx.Client(http2=True) as client:
+            response = client.get(url, timeout=10)
         if response.status_code == 200:
             emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', response.text)
             return emails[0] if emails else None
     except:
         pass
     return None
-
 
 def main():
     st.title("Web Scraping di Email da Siti Web")
@@ -39,7 +35,6 @@ def main():
         if results:
             df = pd.DataFrame(results)
             st.dataframe(df)
-
 
 if __name__ == "__main__":
     main()
