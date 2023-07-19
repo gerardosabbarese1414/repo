@@ -1,5 +1,5 @@
 import re
-import httpx
+import requests
 import csv
 import streamlit as st
 
@@ -25,7 +25,7 @@ def main():
                 # Search in websites or domains
                 if (item.startswith("http://") or item.startswith("https://")):
                     try:
-                        response = httpx.get(item, timeout=10)
+                        response = requests.get(item, timeout=10)
                         if response.status_code == 200:
                             emails = get_emails_from_text(response.text)
                             for email in emails:
@@ -53,7 +53,14 @@ def main():
                     mime="text/csv"
                 )
         else:
-            st.write("Nessun risultato trovato.")
+            csv_data = "Sito Web o Dominio,Email Trovata\n"
+            for result in results:
+                csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
+            st.download_button(
+                label="Scarica il file CSV",
+                data=csv_data.encode(),
+                file_name="results.csv",
+                mime="text/csv"
 
 
 if __name__ == "__main__":

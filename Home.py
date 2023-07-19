@@ -1,76 +1,57 @@
 import re
-import httpx
+import requests
 import csv
 import streamlit as st
-import pandas as pd
-
-def get_first_email_from_website(url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
-    try:
-        with httpx.Client(timeout=10) as client:
-            response = client.get(url, headers=headers)
-        if response.status_code == 200:
-            emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', response.text)
-            return emails[0] if emails else None
-    except:
-        pass
-    return None
 
 def get_emails_from_text(text):
     emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     return emails
 
-def contains_dot(text):
-    return "." in text
-
-def create_csv(results):
-    if results:
-        df = pd.DataFrame(results)
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        return csv_buffer.getvalue()
-    return None
-
 def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
+    st.write("Inserisci gli URL dei siti web o domini, o del testo (uno per riga).")
 
     user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
     items = user_input.split("\n")
 
-    if st.button("Cerca Email"):
-        results = []
+    results = []
 
-        for item in items:
-            item = item.strip()
-            if item:
-                # Search in websites or domains
-                if (item.startswith("http://") or item.startswith("https://")) or contains_dot(item):
-                    email = get_first_email_from_website(item)
-                    if email:
-                        results.append({"Sito Web o Dominio": item, "Email Trovata": email})
-                # Search in plain text
-                else:
-                    emails = get_emails_from_text(item)
-                    for email in emails:
-                        results.append({"Testo": item, "Email Trovata": email})
+    for item in items:
+        item = item.strip()
+        if item:
+            # Search in websites or domains
+            if (item.startswith("http://") or item.startswith("https://")):
+                try:
+                    response = requests.get(item, timeout=10)
+                    if response.status_code == 200:
+                        emails = get_emails_from_text(response.text)
+                        for email in emails:
+                            results.append({"Sito Web o Dominio": item, "Email Trovata": email})
+                except:
+                    pass
+            # Search in plain text
+            else:
+                emails = get_emails_from_text(item)
+                for email in emails:
+                    results.append({"Testo": item, "Email Trovata": email})
 
-        if results:
-            with st.beta_expander("Risultati"):
-                df = pd.DataFrame(results)
-                st.table(df)
+    if results:
+        with st.beta_expander("Risultati"):
+            st.table(results)
 
-                csv_data = create_csv(results)
-                if csv_data:
-                    st.download_button(
-                        label="Scarica il file CSV",
-                        data=csv_data,
-                        file_name="results.csv",
-                        mime="text/csv"
-                    )
-        else:
-            st.write("Nessun risultato trovato.")
+            # Download CSV
+            csv_data = "Sito Web o Dominio,Email Trovata\n"
+            for result in results:
+                csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
+            st.download_button(
+                label="Scarica il file CSV",
+                data=csv_data.encode(),
+                file_name="results.csv",
+                mime="text/csv"
+            )
+    else:
+        st.write("Nessun risultato trovato.")
 
 if __name__ == "__main__":
     main()
