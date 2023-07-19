@@ -21,6 +21,13 @@ def get_emails_from_text(text):
 def contains_dot(text):
     return "." in text
 
+def create_csv(results):
+    if results:
+        df = pd.DataFrame(results)
+        csv_data = df.to_csv(index=False)
+        return csv_data
+    return None
+
 def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
@@ -47,8 +54,15 @@ def main():
                         results.append({"Testo": item, "Email Trovata": email})
 
         if results:
-            df = pd.DataFrame(results)
-            st.dataframe(df)
+            st.dataframe(pd.DataFrame(results))
+            csv_data = create_csv(results)
+            if csv_data:
+                st.download_button(
+                    label="Scarica il file CSV",
+                    data=csv_data,
+                    file_name="results.csv",
+                    mime="text/csv"
+                )
 
 if __name__ == "__main__":
     main()
