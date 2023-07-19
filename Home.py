@@ -1,13 +1,12 @@
+
 import re
 import requests
 import csv
 import streamlit as st
 
-
 def get_emails_from_text(text):
     emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     return emails
-
 
 def main():
     st.title("Web Scraping di Email da Siti Web")
