@@ -1,42 +1,60 @@
-import ssl
-
-# Disabilita la verifica del certificato SSL
-ssl._create_default_https_context = ssl._create_default_https_context = ssl._create_default_https_context = ssl._create_unverified_context
-
+import re
+import httpx
+import csv
 import streamlit as st
 
-            data.append([startup_name, email])
 
-        # Passa alla pagina successiva, se presente
-        next_button = driver.find_element_by_id('prossimo')
-        if 'disabled' in next_button.get_attribute('class'):
-            break
-        else:
-            next_button.click()
+def get_emails_from_text(text):
+    emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
+    return emails
 
-    driver.quit()
 
-    # Crea un DataFrame con i dati estratti
-    columns = ['Nome Startup', 'Email']
-    df = pd.DataFrame(data, columns=columns)
-
-    return df
-
-# Funzione principale dell'app Streamlit
 def main():
-    st.title("Estrazione Dati Startup Innovative")
+    st.title("Web Scraping di Email da Siti Web")
+    st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
 
-    if st.button("Estrai Dati"):
-        st.text("Estrazione dei dati in corso...")
-        startup_data = extract_startup_data()
+    user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
+    items = user_input.split("\n")
 
-        if startup_data is not None:
-            st.write("Dati delle startup innovative:")
-            st.dataframe(startup_data)
+    if st.button("Cerca Email"):
+        results = []
 
-            # Scarica i dati in un file CSV
-            csv_file = startup_data.to_csv(index=False)
-            st.download_button("Scarica CSV", data=csv_file, file_name='startup_data.csv', mime='text/csv')
+        for item in items:
+            item = item.strip()
+            if item:
+                # Search in websites or domains
+                if (item.startswith("http://") or item.startswith("https://")):
+                    try:
+                        response = httpx.get(item, timeout=10)
+                        if response.status_code == 200:
+                            emails = get_emails_from_text(response.text)
+                            for email in emails:
+                                results.append({"Sito Web o Dominio": item, "Email Trovata": email})
+                    except:
+                        pass
+                # Search in plain text
+                else:
+                    emails = get_emails_from_text(item)
+                    for email in emails:
+                        results.append({"Testo": item, "Email Trovata": email})
 
-if __name__ == '__main__':
+        if results:
+            with st.beta_expander("Risultati"):
+                st.table(results)
+
+                # Download CSV
+                csv_data = "Sito Web o Dominio,Email Trovata\n"
+                for result in results:
+                    csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
+                st.download_button(
+                    label="Scarica il file CSV",
+                    data=csv_data.encode(),
+                    file_name="results.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.write("Nessun risultato trovato.")
+
+
+if __name__ == "__main__":
     main()
