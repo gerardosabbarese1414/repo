@@ -2,7 +2,7 @@ import re
 import requests
 import csv
 import streamlit as st
-from io import BytesIO
+import pandas as pd
 
 def get_first_email_from_website(url):
     try:
@@ -32,23 +32,8 @@ def main():
                     results.append({"Sito Web": url, "Email Trovata": email})
 
         if results:
-            csv_data = BytesIO()
-            with csv_data as csvfile:
-                fieldnames = ["Sito Web", "Email Trovata"]
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                for result in results:
-                    writer.writerow(result)
-
-            st.success("Risultati generati con successo!")
-
-            if st.button("Scarica CSV"):
-                st.download_button(
-                    label="Scarica il file CSV",
-                    data=csv_data.getvalue(),
-                    file_name="results.csv",
-                    mime="text/csv"
-                )
+            df = pd.DataFrame(results)
+            st.dataframe(df)
 
 if __name__ == "__main__":
     main()
