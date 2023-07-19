@@ -1,13 +1,12 @@
 import re
-import httpx
+import requests
 import csv
 import streamlit as st
 import pandas as pd
 
 def get_first_email_from_website(url):
     try:
-        with httpx.Client(http2=True) as client:
-            response = client.get(url, timeout=10)
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
             emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', response.text)
             return emails[0] if emails else None
