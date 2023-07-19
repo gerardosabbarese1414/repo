@@ -13,45 +13,48 @@ def main():
     st.write("Inserisci gli URL dei siti web o domini, o del testo (uno per riga).")
 
     user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
-    items = user_input.split("\n")
+    start_scraping = st.button("Avvia la Ricerca")
 
-    results = []
+    if start_scraping:
+        items = user_input.split("\n")
 
-    for item in items:
-        item = item.strip()
-        if item:
-            # Search in websites or domains
-            if (item.startswith("http://") or item.startswith("https://")):
-                try:
-                    response = requests.get(item, timeout=10)
-                    if response.status_code == 200:
-                        emails = get_emails_from_text(response.text)
-                        for email in emails:
-                            results.append({"Sito Web o Dominio": item, "Email Trovata": email})
-                except:
-                    pass
-            # Search in plain text
-            else:
-                emails = get_emails_from_text(item)
-                for email in emails:
-                    results.append({"Testo": item, "Email Trovata": email})
+        results = []
 
-    if results:
-        with st.beta_expander("Risultati"):
-            st.table(results)
+        for item in items:
+            item = item.strip()
+            if item:
+                # Search in websites or domains
+                if (item.startswith("http://") or item.startswith("https://")):
+                    try:
+                        response = requests.get(item, timeout=10)
+                        if response.status_code == 200:
+                            emails = get_emails_from_text(response.text)
+                            for email in emails:
+                                results.append({"Sito Web o Dominio": item, "Email Trovata": email})
+                    except:
+                        pass
+                # Search in plain text
+                else:
+                    emails = get_emails_from_text(item)
+                    for email in emails:
+                        results.append({"Testo": item, "Email Trovata": email})
 
-            # Download CSV
-            csv_data = "Sito Web o Dominio,Email Trovata\n"
-            for result in results:
-                csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
-            st.download_button(
-                label="Scarica il file CSV",
-                data=csv_data.encode(),
-                file_name="results.csv",
-                mime="text/csv"
-            )
-    else:
-        st.write("Nessun risultato trovato.")
+        if results:
+            with st.beta_expander("Risultati"):
+                st.table(results)
+
+                # Download CSV
+                csv_data = "Sito Web o Dominio,Email Trovata\n"
+                for result in results:
+                    csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
+                st.download_button(
+                    label="Scarica il file CSV",
+                    data=csv_data.encode(),
+                    file_name="results.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.write("Nessun risultato trovato.")
 
 if __name__ == "__main__":
     main()
