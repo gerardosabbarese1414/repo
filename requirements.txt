@@ -3,6 +3,6 @@ requests
 pandas
 httpx
 beautifulsoup4
-
+tqdm
 
 

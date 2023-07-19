@@ -1,23 +1,30 @@
-
+import os
 import re
-import requests
 import csv
-import streamlit as st
+import requests
+from tqdm import tqdm
+
 
 def get_emails_from_text(text):
     emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     return emails
 
+
 def main():
-    st.title("Web Scraping di Email da Siti Web")
-    st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
+    print("Web Scraping di Email da Siti Web")
+    print("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
 
-    user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
-    items = user_input.split("\n")
+    user_input = input(
+        "Inserisci gli URL dei siti web o domini, o del testo (uno per riga). Digita 'FINE' per terminare l'inserimento.\n")
+    items = []
 
-    if st.button("Cerca Email"):
-        results = []
+    while user_input.strip().lower() != 'fine':
+        items.append(user_input.strip())
+        user_input = input()
 
+    results = []
+
+    with tqdm(total=len(items)) as pbar:
         for item in items:
             item = item.strip()
             if item:
@@ -36,23 +43,21 @@ def main():
                     emails = get_emails_from_text(item)
                     for email in emails:
                         results.append({"Testo": item, "Email Trovata": email})
+            pbar.update(1)
 
-        if results:
-            with st.beta_expander("Risultati"):
-                st.table(results)
+    if results:
+        desktop_path = os.path.join(os.path.expanduser('~'), 'Desktop')
+        csv_file = os.path.join(desktop_path, "MANNAGGIA LA MADONNA.csv")
 
-                # Download CSV
-                csv_data = "Sito Web o Dominio,Email Trovata\n"
-                for result in results:
-                    csv_data += f"{result.get('Sito Web o Dominio', '')},{result.get('Email Trovata', '')}\n"
-                st.download_button(
-                    label="Scarica il file CSV",
-                    data=csv_data.encode(),
-                    file_name="results.csv",
-                    mime="text/csv"
-                )
-        else:
-            st.write("Nessun risultato trovato.")
+        with open(csv_file, "w", newline="", encoding="utf-8") as csvfile:
+            fieldnames = ["Sito Web o Dominio", "Testo", "Email Trovata"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for result in results:
+                writer.writerow(result)
+        print(f"Risultati salvati correttamente nel file '{csv_file}'")
+    else:
+        print("Nessun risultato trovato.")
 
 
 if __name__ == "__main__":
