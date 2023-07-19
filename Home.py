@@ -2,6 +2,9 @@ import re
 import requests
 import csv
 import streamlit as st
+from io import BytesIO
+import tempfile
+import os
 
 def get_first_email_from_website(url):
     try:
@@ -24,30 +27,33 @@ def main():
         st.write("Risultati:")
         results = []
 
-        progress_bar = st.progress(0)
-        for i, url in enumerate(urls):
+        for url in urls:
             if url:
                 email = get_first_email_from_website(f"http://{url}")
                 if email:
                     results.append({"Sito Web": url, "Email Trovata": email})
 
-            progress = (i + 1) / len(urls)
-            progress_bar.progress(progress)
-
         if results:
-            with open("results.csv", "w", newline="", encoding="utf-8") as csvfile:
-                fieldnames = ["Sito Web", "Email Trovata"]
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                for result in results:
-                    writer.writerow(result)
-            st.success("Risultati generati con successo!")
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                with open(temp_file.name, "w", newline="", encoding="utf-8") as csvfile:
+                    fieldnames = ["Sito Web", "Email Trovata"]
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for result in results:
+                        writer.writerow(result)
 
-            if st.button("Scarica CSV"):
-                st.markdown(
-                    f'<a href="results.csv" download>Scarica il file CSV</a>',
-                    unsafe_allow_html=True
-                )
+                st.success("Risultati generati con successo!")
+
+                if st.button("Scarica CSV"):
+                    with open(temp_file.name, "rb") as file:
+                        st.download_button(
+                            label="Scarica il file CSV",
+                            data=file,
+                            file_name="results.csv",
+                            mime="text/csv"
+                        )
+
+                os.remove(temp_file.name)
 
 if __name__ == "__main__":
     main()

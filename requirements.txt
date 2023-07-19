@@ -5,4 +5,5 @@ streamlit
 selenium
 webdriver_manager
 chromedriver_autoinstaller
+tempfile
 
