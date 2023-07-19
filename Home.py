@@ -4,7 +4,11 @@ import csv
 import streamlit as st
 import pandas as pd
 
+
 def get_first_email_from_website(url):
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = f"http://{url}"
+
     try:
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
@@ -13,6 +17,7 @@ def get_first_email_from_website(url):
     except:
         pass
     return None
+
 
 def main():
     st.title("Web Scraping di Email da Siti Web")
@@ -26,6 +31,7 @@ def main():
         results = []
 
         for url in urls:
+            url = url.strip()
             if url:
                 email = get_first_email_from_website(url)
                 if email:
@@ -34,6 +40,7 @@ def main():
         if results:
             df = pd.DataFrame(results)
             st.dataframe(df)
+
 
 if __name__ == "__main__":
     main()
