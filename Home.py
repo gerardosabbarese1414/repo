@@ -25,11 +25,10 @@ def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web, solo il dominio o del testo per cercare email.")
 
-    user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)")
+    user_input = st.text_area("Inserisci gli URL dei siti web o domini, o del testo (uno per riga)", height=150)
     items = user_input.split("\n")
 
     if st.button("Cerca Email"):
-        st.write("Risultati:")
         results = []
 
         for item in items:
@@ -47,7 +46,10 @@ def main():
                         results.append({"Testo": item, "Email Trovata": email})
 
         if results:
-            st.table(pd.DataFrame(results))
+            with st.beta_expander("Risultati"):
+                st.table(pd.DataFrame(results))
+        else:
+            st.write("Nessun risultato trovato.")
 
 if __name__ == "__main__":
     main()
