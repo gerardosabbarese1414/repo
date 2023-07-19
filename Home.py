@@ -19,6 +19,10 @@ def get_first_email_from_website(url):
     return None
 
 
+def contains_dot(text):
+    return "." in text
+
+
 def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web o solo il dominio per cercare email.")
@@ -36,6 +40,10 @@ def main():
                 email = get_first_email_from_website(url)
                 if email:
                     results.append({"Sito Web o Dominio": url, "Email Trovata": email})
+                elif contains_dot(url):
+                    email = get_first_email_from_website(f"http://{url}")
+                    if email:
+                        results.append({"Sito Web o Dominio": url, "Email Trovata": email})
 
         if results:
             df = pd.DataFrame(results)
