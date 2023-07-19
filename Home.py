@@ -2,9 +2,6 @@ import re
 import requests
 import csv
 import streamlit as st
-from tqdm import tqdm
-import time
-
 
 def get_first_email_from_website(url):
     try:
@@ -16,7 +13,6 @@ def get_first_email_from_website(url):
         pass
     return None
 
-
 def main():
     st.title("Web Scraping di Email da Siti Web")
     st.write("Inserisci l'URL di un sito web senza HTTPS per cercare email.")
@@ -25,14 +21,18 @@ def main():
     urls = url_list.split("\n")
 
     if st.button("Cerca Email"):
+        st.write("Risultati:")
         results = []
 
-        with st.spinner("Ricerca in corso..."):
-            for url in tqdm(urls, desc="Progresso", dynamic_ncols=True):
-                if url:
-                    email = get_first_email_from_website(f"http://{url}")
-                    if email:
-                        results.append({"Sito Web": url, "Email Trovata": email})
+        progress_bar = st.progress(0)
+        for i, url in enumerate(urls):
+            if url:
+                email = get_first_email_from_website(f"http://{url}")
+                if email:
+                    results.append({"Sito Web": url, "Email Trovata": email})
+
+            progress = (i + 1) / len(urls)
+            progress_bar.progress(progress)
 
         if results:
             with open("results.csv", "w", newline="", encoding="utf-8") as csvfile:
@@ -41,12 +41,13 @@ def main():
                 writer.writeheader()
                 for result in results:
                     writer.writerow(result)
-            st.success("Risultati salvati in results.csv. Puoi scaricarlo dal link qui sotto.")
-            st.markdown(
-                f'<a href="results.csv" download>Scarica il file CSV</a>',
-                unsafe_allow_html=True
-            )
+            st.success("Risultati generati con successo!")
 
+            if st.button("Scarica CSV"):
+                st.markdown(
+                    f'<a href="results.csv" download>Scarica il file CSV</a>',
+                    unsafe_allow_html=True
+                )
 
 if __name__ == "__main__":
     main()
