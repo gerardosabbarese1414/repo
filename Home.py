@@ -3,7 +3,6 @@ import requests
 import csv
 import streamlit as st
 import pandas as pd
-from io import StringIO
 
 def get_first_email_from_website(url):
     try:
@@ -21,14 +20,6 @@ def get_emails_from_text(text):
 
 def contains_dot(text):
     return "." in text
-
-def create_csv(results):
-    if results:
-        df = pd.DataFrame(results)
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        return csv_buffer.getvalue()
-    return None
 
 def main():
     st.title("Web Scraping di Email da Siti Web")
@@ -56,15 +47,7 @@ def main():
                         results.append({"Testo": item, "Email Trovata": email})
 
         if results:
-            st.dataframe(pd.DataFrame(results))
-            csv_data = create_csv(results)
-            if csv_data:
-                st.download_button(
-                    label="Scarica il file CSV",
-                    data=csv_data,
-                    file_name="results.csv",
-                    mime="text/csv"
-                )
+            st.table(pd.DataFrame(results))
 
 if __name__ == "__main__":
     main()
