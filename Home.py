@@ -3,7 +3,6 @@ import requests
 import csv
 import streamlit as st
 from io import BytesIO
-import os
 
 def get_first_email_from_website(url):
     try:
@@ -34,7 +33,7 @@ def main():
 
         if results:
             csv_data = BytesIO()
-            with open(csv_data, "w", newline="", encoding="utf-8") as csvfile:
+            with csv_data as csvfile:
                 fieldnames = ["Sito Web", "Email Trovata"]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
@@ -44,10 +43,9 @@ def main():
             st.success("Risultati generati con successo!")
 
             if st.button("Scarica CSV"):
-                csv_data.seek(0)
                 st.download_button(
                     label="Scarica il file CSV",
-                    data=csv_data,
+                    data=csv_data.getvalue(),
                     file_name="results.csv",
                     mime="text/csv"
                 )
