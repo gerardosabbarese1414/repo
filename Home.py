@@ -3,7 +3,6 @@ import requests
 import csv
 import streamlit as st
 from io import BytesIO
-import tempfile
 import os
 
 def get_first_email_from_website(url):
@@ -34,26 +33,24 @@ def main():
                     results.append({"Sito Web": url, "Email Trovata": email})
 
         if results:
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                with open(temp_file.name, "w", newline="", encoding="utf-8") as csvfile:
-                    fieldnames = ["Sito Web", "Email Trovata"]
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    writer.writeheader()
-                    for result in results:
-                        writer.writerow(result)
+            csv_data = BytesIO()
+            with open(csv_data, "w", newline="", encoding="utf-8") as csvfile:
+                fieldnames = ["Sito Web", "Email Trovata"]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for result in results:
+                    writer.writerow(result)
 
-                st.success("Risultati generati con successo!")
+            st.success("Risultati generati con successo!")
 
-                if st.button("Scarica CSV"):
-                    with open(temp_file.name, "rb") as file:
-                        st.download_button(
-                            label="Scarica il file CSV",
-                            data=file,
-                            file_name="results.csv",
-                            mime="text/csv"
-                        )
-
-                os.remove(temp_file.name)
+            if st.button("Scarica CSV"):
+                csv_data.seek(0)
+                st.download_button(
+                    label="Scarica il file CSV",
+                    data=csv_data,
+                    file_name="results.csv",
+                    mime="text/csv"
+                )
 
 if __name__ == "__main__":
     main()

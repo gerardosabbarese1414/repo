@@ -1,9 +1,5 @@
-beautifulsoup4
-pandas
-requests
 streamlit
-selenium
-webdriver_manager
-chromedriver_autoinstaller
-tempfile
+requests
+
+
 
